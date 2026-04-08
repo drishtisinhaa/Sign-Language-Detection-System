@@ -4,66 +4,145 @@
     <title>Sign Language Detection</title>
 
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: #0f0f0f;
+            background: radial-gradient(circle at top, #1a1a1a, #000);
             color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0,255,200,0.15);
             text-align: center;
-            font-family: Arial;
+            width: 420px;
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
         }
 
         video {
+            width: 100%;
             border-radius: 12px;
-            margin-top: 20px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(0,255,200,0.3);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
 
         button {
-            padding: 12px 20px;
-            margin-top: 20px;
-            font-size: 16px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s ease;
         }
 
         #startBtn {
-            background: #00ffcc;
+            background: #00ffc8;
+            color: black;
         }
 
-        #result {
+        #stopBtn {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .result-box {
             margin-top: 20px;
-            font-size: 24px;
-            color: #00ffcc;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(0, 255, 200, 0.08);
+            border: 1px solid rgba(0,255,200,0.3);
+        }
+
+        .label {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .prediction {
+            font-size: 28px;
+            margin-top: 5px;
+            color: #00ffc8;
+            font-weight: bold;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 12px;
+            opacity: 0.6;
         }
     </style>
 </head>
 
 <body>
 
-<h1>Sign Language Detection</h1>
+<div class="container">
+    <h1>Sign Language Detection</h1>
 
-<video id="video" width="400" autoplay></video>
+    <video id="video" autoplay></video>
 
-<br>
+    <div class="controls">
+        <button id="startBtn">Start</button>
+        <button id="stopBtn">Stop</button>
+    </div>
 
-<button id="startBtn">Start Detection</button>
+    <div class="result-box">
+        <div class="label">Prediction</div>
+        <div id="prediction" class="prediction">---</div>
+    </div>
 
-<div id="result">Prediction: ---</div>
+    <div id="status" class="status">Camera ready</div>
+</div>
 
 <script>
 const video = document.getElementById('video');
-const result = document.getElementById('result');
+const predictionText = document.getElementById('prediction');
+const statusText = document.getElementById('status');
 
+let interval = null;
 
+// Start camera
 navigator.mediaDevices.getUserMedia({ video: true })
 .then(stream => {
     video.srcObject = stream;
 });
 
-
+// Start detection
 document.getElementById('startBtn').onclick = () => {
-    setInterval(() => {
-        captureAndSend();
-    }, 1000);
+    statusText.innerText = "Detecting...";
+    interval = setInterval(captureAndSend, 800);
+};
+
+// Stop detection
+document.getElementById('stopBtn').onclick = () => {
+    clearInterval(interval);
+    statusText.innerText = "Stopped";
 };
 
 function captureAndSend() {
@@ -85,10 +164,10 @@ function captureAndSend() {
     })
     .then(res => res.json())
     .then(data => {
-        result.innerText = "Prediction: " + data.prediction;
+        predictionText.innerText = data.prediction;
     })
-    .catch(err => {
-        result.innerText = "Error connecting to backend";
+    .catch(() => {
+        statusText.innerText = "Backend not connected";
     });
 }
 </script>
