@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Language Detection</title>
+
+    <style>
+        body {
+            background: #0f0f0f;
+            color: white;
+            text-align: center;
+            font-family: Arial;
+        }
+
+        video {
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin-top: 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #startBtn {
+            background: #00ffcc;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 24px;
+            color: #00ffcc;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Sign Language Detection</h1>
+
+<video id="video" width="400" autoplay></video>
+
+<br>
+
+<button id="startBtn">Start Detection</button>
+
+<div id="result">Prediction: ---</div>
+
+<script>
+const video = document.getElementById('video');
+const result = document.getElementById('result');
+
+// Start camera
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+});
+
+// Capture & send frame every 1 sec
+document.getElementById('startBtn').onclick = () => {
+    setInterval(() => {
+        captureAndSend();
+    }, 1000);
+};
+
+function captureAndSend() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 300;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, 400, 300);
+
+    const image = canvas.toDataURL('image/jpeg');
+
+    fetch('http://127.0.0.1:5000/predict', {
+        method: 'POST',
+        body: JSON.stringify({ image: image }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        result.innerText = "Prediction: " + data.prediction;
+    })
+    .catch(err => {
+        result.innerText = "Error connecting to backend";
+    });
+}
+</script>
+
+</body>
+</html>
